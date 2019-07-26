@@ -11,7 +11,7 @@ Download files from an open directory into your local filesystem while preservin
 
 ### Installing
 ```
-$ go get https://github.com/nektro/getit
+$ go get github.com/nektro/getit
 ```
 
 ### Usage
