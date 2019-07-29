@@ -14,7 +14,8 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	mapset "github.com/deckarep/golang-set"
 	"github.com/nektro/go-util/util"
-	"github.com/schollz/progressbar"
+	"github.com/vbauerster/mpb"
+	"github.com/vbauerster/mpb/decor"
 )
 
 var (
@@ -110,7 +111,9 @@ func hasFileExtension(page string) bool {
 }
 
 const (
+	eraseLine         = "\x1b[2K"
 	moveToStartOfLine = "\x1b[0G"
+	moveUp            = "\x1b[A"
 )
 
 func download(path string) {
@@ -136,12 +139,29 @@ func download(path string) {
 	f, _ := os.OpenFile(p, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, os.ModePerm)
 	defer f.Close()
 
-	l := int(res.ContentLength)
-	bar := progressbar.NewOptions(l, progressbar.OptionSetBytes(l))
-	out := io.MultiWriter(f, bar)
-	io.Copy(out, res.Body)
+	l := res.ContentLength
 
-	fmt.Print(moveToStartOfLine)
+	q := mpb.New(
+		mpb.WithWidth(80),
+		mpb.WithRefreshRate(150*time.Millisecond),
+	)
+	bar := q.AddBar(l, mpb.BarStyle("[=>-|"),
+		mpb.PrependDecorators(
+			decor.CountersKibiByte("% 6.1f / % 6.1f"),
+		),
+		mpb.AppendDecorators(
+			decor.EwmaETA(decor.ET_STYLE_MMSS, float64(l)/2048),
+			decor.Name(" ] "),
+			decor.AverageSpeed(decor.UnitKiB, "% .2f"),
+		),
+	)
+
+	reader := bar.ProxyReader(res.Body)
+	io.Copy(f, reader)
+	q.Wait()
+
+	fmt.Print(moveUp)
+	fmt.Print(eraseLine)
 }
 
 func getTime() string {
