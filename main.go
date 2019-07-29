@@ -116,15 +116,20 @@ const (
 func download(path string) {
 	u, _ := url.Parse(path)
 	n, _ := url.PathUnescape(u.Path)
-
-	if util.DoesFileExist(p) {
-		return
-	}
 	p, _ := filepath.Abs(strings.ReplaceAll(u.Hostname(), ":", "+") + n)
 	fmt.Println(getTime(), p)
 
 	res, _ := http.Get(path)
 	defer res.Body.Close()
+
+	if util.DoesFileExist(p) {
+		info, err := os.Stat(p)
+		if err == nil {
+			if info.Size() == res.ContentLength {
+				return
+			}
+		}
+	}
 
 	d := filepath.Dir(p)
 	os.MkdirAll(d, os.ModePerm)
