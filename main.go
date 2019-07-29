@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/PuerkitoBio/goquery"
 	mapset "github.com/deckarep/golang-set"
@@ -26,7 +27,7 @@ func main() {
 	flag.Parse()
 
 	if len(*val) == 0 {
-		fmt.Println("-url is required!")
+		fmt.Println(getTime(), "-url is required!")
 		return
 	}
 
@@ -34,15 +35,15 @@ func main() {
 	u.Path = filepath.Dir(u.Path)
 	root = u.String()
 
-	fmt.Println("Input:", *val)
-	fmt.Println("Root: ", root)
+	fmt.Println(getTime(), "Input:", *val)
+	fmt.Println(getTime(), "Root: ", root)
 
 	crawlPage(*val)
 	fmt.Println()
 }
 
 func crawlPage(path string) {
-	fmt.Println("[DIR]", path)
+	fmt.Println(getTime(), "[DIR]", path)
 	//
 	res, err := http.Get(path)
 	if err != nil {
@@ -116,11 +117,11 @@ func download(path string) {
 	u, _ := url.Parse(path)
 	n, _ := url.PathUnescape(u.Path)
 	p, _ := filepath.Abs(u.Hostname() + n)
-	fmt.Println(p)
 
 	if util.DoesFileExist(p) {
 		return
 	}
+	fmt.Println(getTime(), p)
 
 	res, _ := http.Get(path)
 	defer res.Body.Close()
@@ -136,4 +137,8 @@ func download(path string) {
 	io.Copy(out, res.Body)
 
 	fmt.Print(moveToStartOfLine)
+}
+
+func getTime() string {
+	return "[" + time.Now().String()[11:19] + "]"
 }
