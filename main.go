@@ -116,11 +116,11 @@ const (
 func download(path string) {
 	u, _ := url.Parse(path)
 	n, _ := url.PathUnescape(u.Path)
-	p, _ := filepath.Abs(u.Hostname() + n)
 
 	if util.DoesFileExist(p) {
 		return
 	}
+	p, _ := filepath.Abs(strings.ReplaceAll(u.Hostname(), ":", "+") + n)
 	fmt.Println(getTime(), p)
 
 	res, _ := http.Get(path)
